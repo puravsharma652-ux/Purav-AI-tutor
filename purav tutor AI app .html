@@ -1,0 +1,351 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purav - Your Personal AI Tutor</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Marked JS for Markdown Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Glowing Avatar Animation */
+        .avatar-glow {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
+        }
+        .avatar-glow-speaking {
+            animation: pulse-glow 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.5), 0 0 40px rgba(168, 85, 247, 0.3);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 35px rgba(99, 102, 241, 0.8), 0 0 60px rgba(168, 85, 247, 0.6);
+                transform: scale(1.03);
+            }
+            100% {
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.5), 0 0 40px rgba(168, 85, 247, 0.3);
+                transform: scale(1);
+            }
+        }
+
+        /* Audio Wave Form CSS Bars */
+        .wave-bar {
+            width: 4px;
+            height: 12px;
+            background-color: #818cf8;
+            border-radius: 9999px;
+            transition: height 0.1s ease;
+        }
+        .speaking .wave-bar {
+            animation: wave 1.2s infinite ease-in-out alternate;
+        }
+        .speaking .wave-bar:nth-child(1) { animation-delay: 0.1s; }
+        .speaking .wave-bar:nth-child(2) { animation-delay: 0.3s; }
+        .speaking .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .speaking .wave-bar:nth-child(4) { animation-delay: 0.4s; }
+        .speaking .wave-bar:nth-child(5) { animation-delay: 0.1s; }
+
+        @keyframes wave {
+            0% { height: 8px; }
+            100% { height: 32px; }
+        }
+
+        /* Glassmorphism containers */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Markdown formatting styles inside response box */
+        .prose code {
+            background-color: rgba(15, 23, 42, 0.8);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+            color: #38bdf8;
+        }
+        .prose pre {
+            background-color: #020617;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            border: 1px solid #1e293b;
+        }
+        .prose ul { list-style-type: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+        .prose ol { list-style-type: decimal; padding-left: 1.25rem; margin: 0.5rem 0; }
+        .prose h1, .prose h2, .prose h3 { font-weight: 700; color: #f1f5f9; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .prose p { margin-bottom: 0.75rem; line-height: 1.6; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-100 antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- TOP HEADER NAVBAR -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-slate-800 px-4 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Brand & Mascot Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-500 to-purple-500 text-white font-black text-xl shadow-lg shadow-indigo-500/20">
+                    <i class="fa-solid font-bold">P</i>
+                    <span class="absolute -bottom-1 -right-1 flex h-3.5 w-3.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-slate-900"></span>
+                    </span>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-100 to-indigo-300">Purav</h1>
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-medium">AI Tutor</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Polite & Intelligent Interactive Learning Assistant</p>
+                </div>
+            </div>
+
+            <!-- Stats & Quick Actions -->
+            <div class="flex items-center space-x-3">
+                <!-- Streak Badge -->
+                <div class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs font-semibold text-amber-400">
+                    <i class="fa-solid fa-fire text-amber-500 animate-bounce"></i>
+                    <span id="streak-counter">1 Day Streak</span>
+                </div>
+
+                <!-- Reset Conversation Button -->
+                <button onclick="clearSession()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-medium transition flex items-center space-x-1.5" title="New Chat">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span class="hidden md:inline">Reset Context</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: Purav Persona & Controls (4 Cols) -->
+        <section class="lg:col-span-4 flex flex-col gap-5">
+            
+            <!-- AVATAR & SPEECH STATUS PANEL -->
+            <div class="glass-panel rounded-3xl p-6 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <!-- Background Accent Glow -->
+                <div class="absolute -top-12 -left-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
+                <div class="absolute -bottom-12 -right-12 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+                <!-- Animated Purav AI Avatar Icon -->
+                <div id="avatar-container" class="relative my-3 w-28 h-28 rounded-full bg-gradient-to-tr from-indigo-600 via-brand-500 to-purple-600 p-1 avatar-glow transition-all duration-300">
+                    <div class="w-full h-full rounded-full bg-slate-900 flex flex-col items-center justify-center relative overflow-hidden">
+                        <i class="fa-solid fa-graduation-cap text-4xl text-indigo-400 mb-1"></i>
+                        <span class="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">Purav</span>
+                    </div>
+                </div>
+
+                <!-- Status Indicator Label -->
+                <div id="tutor-status-text" class="text-sm font-semibold text-indigo-300 mt-2 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Ready to help you learn
+                </div>
+
+                <!-- Audio Wave Visualizer -->
+                <div id="waveform" class="flex items-center justify-center gap-1 h-8 my-3">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+
+                <!-- Voice Control Tools -->
+                <div class="flex items-center justify-center gap-2 w-full mt-1 pt-3 border-t border-slate-800">
+                    <button id="repeat-btn" onclick="speakCurrentResponse()" disabled class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300 hover:text-white transition flex items-center justify-center text-xs gap-1.5 px-3">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <span>Replay Voice</span>
+                    </button>
+                    <button id="stop-voice-btn" onclick="stopSpeech()" disabled class="p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 disabled:opacity-40 disabled:cursor-not-allowed border border-red-500/20 transition text-xs font-medium px-3 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-stop"></i>
+                        <span>Stop Voice</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SETTINGS: SUBJECT & LANGUAGE SELECTORS -->
+            <div class="glass-panel rounded-3xl p-5 space-y-4">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-brand-400"></i> Learning Preferences
+                </h2>
+
+                <!-- Subject Selection Dropdown -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Target Subject</label>
+                    <div class="relative">
+                        <select id="subject-select" onchange="updateSubjectTheme()" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-500 transition appearance-none cursor-pointer pr-10">
+                            <option value="Mathematics">📐 Mathematics</option>
+                            <option value="Physics">⚡ Physics</option>
+                            <option value="Chemistry">🧪 Chemistry</option>
+                            <option value="Biology">🧬 Biology</option>
+                            <option value="Computer Science">💻 Computer Science</option>
+                            <option value="History">🏛️ History</option>
+                            <option value="Literature">📚 Literature & Grammar</option>
+                            <option value="General Knowledge">🌍 General Knowledge</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3.5 top-3.5 text-xs text-slate-400 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- Language Selection Dropdown -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Instruction Language</label>
+                    <div class="relative">
+                        <select id="language-select" onchange="onLanguageChange()" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-500 transition appearance-none cursor-pointer pr-10">
+                            <option value="en-US">English (US/UK)</option>
+                            <option value="hi-IN">Hindi (हिंदी)</option>
+                            <option value="es-ES">Spanish (Español)</option>
+                            <option value="fr-FR">French (Français)</option>
+                            <option value="de-DE">German (Deutsch)</option>
+                            <option value="zh-CN">Mandarin Chinese (中文)</option>
+                            <option value="ja-JP">Japanese (日本語)</option>
+                            <option value="ar-SA">Arabic (العربية)</option>
+                            <option value="ru-RU">Russian (Русский)</option>
+                            <option value="pt-BR">Portuguese (Português)</option>
+                        </select>
+                        <i class="fa-solid fa-language absolute right-3.5 top-3.5 text-xs text-slate-400 pointer-events-none"></i>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Purav will answer and speak fluently in your selected language.</p>
+                </div>
+
+                <!-- Voice Fine-Tuning Controls -->
+                <div class="pt-2 border-t border-slate-800/80 space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-400">Voice Speed (Pace)</span>
+                            <span id="rate-val" class="text-indigo-400 font-mono">0.9x</span>
+                        </div>
+                        <input id="voice-rate" type="range" min="0.6" max="1.3" step="0.05" value="0.9" oninput="document.getElementById('rate-val').innerText = this.value + 'x'" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECENT CONCEPTS EXPLORED -->
+            <div class="glass-panel rounded-3xl p-5 flex-1 flex flex-col">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-clock-rotate-left text-brand-400 mr-1.5"></i> Recent Topics</span>
+                    <button onclick="clearRecentTopics()" class="text-[10px] text-slate-500 hover:text-slate-300">Clear</button>
+                </h3>
+                <div id="recent-topics-list" class="space-y-2 overflow-y-auto max-h-48 pr-1 text-xs">
+                    <p class="text-slate-500 italic text-center py-4">No recent queries yet. Ask a question!</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: INTERACTIVE TUTOR CHAT & SCREEN WORKSPACE (8 Cols) -->
+        <section class="lg:col-span-8 flex flex-col gap-4 min-h-[600px] h-[calc(100vh-8.5rem)]">
+
+            <!-- QUICK STARTER PROMPTS / SUGGESTIONS -->
+            <div id="quick-prompts" class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                <span class="text-xs font-semibold text-slate-400 whitespace-nowrap"><i class="fa-solid fa-bolt text-amber-400"></i> Quick Topics:</span>
+                <button onclick="askQuickPrompt('Explain Quantum Physics in simple terms with everyday analogies.')" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/80 border border-slate-700/60 text-xs text-slate-300 whitespace-nowrap transition">
+                    ⚛️ Quantum Physics simple
+                </button>
+                <button onclick="askQuickPrompt('Help me solve quadratic equations step-by-step using the formula.')" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/80 border border-slate-700/60 text-xs text-slate-300 whitespace-nowrap transition">
+                    📐 Quadratic Equations
+                </button>
+                <button onclick="askQuickPrompt('How does Photosynthesis work? Explain the light reaction.')" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/80 border border-slate-700/60 text-xs text-slate-300 whitespace-nowrap transition">
+                    🌿 Photosynthesis
+                </button>
+                <button onclick="askQuickPrompt('Explain recursion in computer science with a practical code example.')" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/80 border border-slate-700/60 text-xs text-slate-300 whitespace-nowrap transition">
+                    💻 CS Recursion
+                </button>
+            </div>
+
+            <!-- TUTOR SCREEN / CHAT DISPLAY BOARD -->
+            <div id="chat-board" class="flex-1 glass-panel rounded-3xl p-5 md:p-6 overflow-y-auto flex flex-col gap-4 border border-slate-800">
+                
+                <!-- Welcome Banner / Introduction from Purav -->
+                <div class="flex gap-4 p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/20">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center shrink-0 text-indigo-400">
+                        <i class="fa-solid fa-hand-wave"></i>
+                    </div>
+                    <div class="space-y-1 text-sm">
+                        <h4 class="font-bold text-indigo-200">Hello! I am Purav, your personal tutor.</h4>
+                        <p class="text-slate-300 leading-relaxed">
+                            Select any subject and ask me whatever you'd like to learn! I will explain everything with polite, polite step-by-step guidance, code, and examples. You can type or use your voice to ask questions.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Chat history will dynamically append here -->
+                <div id="conversation-container" class="space-y-4"></div>
+            </div>
+
+            <!-- INPUT CONTROLS PANEL -->
+            <div class="glass-panel rounded-2xl p-2.5 sm:p-3">
+                <form id="ask-form" onsubmit="handleUserSubmit(event)" class="flex items-center gap-2">
+                    
+                    <!-- Microphone / Speech Recognition Button -->
+                    <button type="button" id="mic-btn" onclick="toggleVoiceInput()" class="w-11 h-11 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 flex items-center justify-center transition shrink-0 relative" title="Speak your question">
+                        <i id="mic-icon" class="fa-solid fa-microphone text-slate-300"></i>
+                        <span id="mic-pulse" class="hidden absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
+                    </button>
+
+                    <!-- Text Question Input Box -->
+                    <div class="relative flex-1">
+                        <input id="user-input" type="text" placeholder="Ask Purav anything... (e.g. Explain Newton's Laws)" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+
+                    <!-- Submit / Send Button -->
+                    <button type="submit" id="send-btn" class="px-5 h-11 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-b
